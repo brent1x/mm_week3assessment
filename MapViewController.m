@@ -16,17 +16,28 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.title = self.station.title;
-
     self.locationManager = [CLLocationManager new];
     [self.locationManager requestAlwaysAuthorization];
     self.locationManager.delegate = self;
     self.mapView.showsUserLocation = YES;
-
     self.bikeAnnotation = [MKPointAnnotation new];
     self.bikeAnnotation.coordinate = self.station.coordinate;
     self.bikeAnnotation.title = self.station.title;
     [self.mapView addAnnotation:self.bikeAnnotation];
+}
 
+#pragma mark Location Manager Methods
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
+    NSLog(@"error");
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations {
+    for (CLLocation *location in locations) {
+        if (location.verticalAccuracy < 1000 && location.horizontalAccuracy < 1000) {
+            [self.locationManager stopUpdatingLocation];
+            break;
+        }
+    }
 }
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation {
