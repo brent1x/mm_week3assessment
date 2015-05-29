@@ -8,6 +8,7 @@
 @property (strong, nonatomic) IBOutlet MKMapView *mapView;
 @property CLLocationManager *locationManager;
 @property MKPointAnnotation *bikeAnnotation;
+@property NSMutableString *directions;
 
 @end
 
@@ -26,7 +27,6 @@
     [self.mapView addAnnotation:self.bikeAnnotation];
 }
 
-#pragma mark Location Manager Methods
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
     NSLog(@"error");
 }
@@ -54,8 +54,28 @@
 }
 
 - (void)mapView:(MKMapView *)mapView annotationView:(MKAnnotationView *)view calloutAccessoryControlTapped:(UIControl *)control {
-    MKCoordinateRegion region = MKCoordinateRegionMake(self.bikeAnnotation.coordinate, MKCoordinateSpanMake(0.05, 0.05));
-    [self.mapView setRegion:region animated:YES];
+    MKPlacemark *mkDest = [[MKPlacemark alloc] initWithCoordinate:self.bikeAnnotation.coordinate addressDictionary:nil];
+    MKDirectionsRequest *request = [MKDirectionsRequest new];
+    request.source = [MKMapItem mapItemForCurrentLocation];
+    request.destination = [[MKMapItem alloc] initWithPlacemark:mkDest];
+    MKDirections *directions = [[MKDirections alloc] initWithRequest:request];
+    [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
+        NSArray *routes = response.routes;
+        MKRoute *route = routes.firstObject;
+        NSMutableString *directions = [NSMutableString new];
+        int x = 1;
+        for (MKRouteStep *step in route.steps) {
+            [directions appendFormat:@"%d: %@\n", x, step.instructions];
+            x++;
+        }
+
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Directions to %@", self.bikeAnnotation.title] message:[NSString stringWithFormat:@"%@", directions] preferredStyle:UIAlertControllerStyleAlert];
+
+        UIAlertAction *dismissButton = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        }];
+        [alertController addAction:dismissButton];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }];
 }
 
 -(void)mapViewDidFinishRenderingMap:(MKMapView *)mapView fullyRendered:(BOOL)fullyRendered {
