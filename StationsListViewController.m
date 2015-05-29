@@ -3,6 +3,7 @@
 #import <MapKit/MapKit.h>
 #import <CoreLocation/CoreLocation.h>
 #import "BikeStation.h"
+#import "MapViewController.h"
 
 @interface StationsListViewController () <UITableViewDelegate, UITableViewDataSource>
 
@@ -11,6 +12,7 @@
 @property NSMutableDictionary *bikeLocationsDictionary;
 @property NSMutableArray *bikeLocationsArray;
 @property NSMutableArray *stationArray;
+@property CLLocationManager *locationManager;
 
 
 @end
@@ -54,6 +56,13 @@
     cell.textLabel.text = station.title;
     cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ bikes available", station.subtitle];
     return cell;
+}
+
+#pragma mark - Prepare For Segue Method
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    MapViewController *mapVC = segue.destinationViewController;
+    mapVC.station = self.stationArray[[self.tableView indexPathForCell:sender].row];
 }
 
 @end
